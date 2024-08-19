@@ -1,7 +1,7 @@
-class FilterModel {
+class QueryParams {
   int? page;
   int? limit;
-  FilterModel({
+  QueryParams({
     this.page,
     this.limit,
   });

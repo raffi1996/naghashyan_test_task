@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:test_task_naghashyan/models/product_model/product_model.dart';
+
+import '../../../models/product_model/product_model.dart';
 
 class ProductItem extends StatelessWidget {
   final ProductModel product;
@@ -19,7 +20,7 @@ class ProductItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.black),
+        border: Border.all(),
       ),
       child: Column(
         children: [
@@ -27,7 +28,6 @@ class ProductItem extends StatelessWidget {
             product.image,
           ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Flexible(
                 child: Text(
@@ -43,7 +43,6 @@ class ProductItem extends StatelessWidget {
             height: 10,
           ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Flexible(
                 child: Text(
@@ -63,7 +62,6 @@ class ProductItem extends StatelessWidget {
             height: 10,
           ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Text(
                 _productPrice,
@@ -79,7 +77,8 @@ class ProductItem extends StatelessWidget {
           ElevatedButton(
             style: ButtonStyle(
               backgroundColor: WidgetStateProperty.all(
-                  product.isActive ? Colors.blueAccent : Colors.white),
+                product.isActive ? Colors.blueAccent : Colors.white,
+              ),
             ),
             onPressed: () {},
             child: Text(

@@ -1,30 +1,29 @@
-import 'package:test_task_naghashyan/models/filter_model/filter_model.dart';
-import 'package:test_task_naghashyan/models/response/meta.dart';
-
+import '../../models/filter_model/filter_model.dart';
 import '../../models/product_model/product_model.dart';
+import '../../models/response/meta.dart';
 import '../../models/response/response.dart';
 import '../dio.dart';
 
 abstract class ProductRepository {
-  Future<Response<List<ProductModel>>> getAllPaginated(FilterModel filter);
+  Future<Response<List<ProductModel>>> getAllPaginated(QueryParams query);
 }
 
 class ImplProductRepository extends ProductRepository {
   @override
   Future<Response<List<ProductModel>>> getAllPaginated(
-    FilterModel filter,
+    QueryParams query,
   ) async {
     final res = await dio.post(
       '/product-listing/a515ae260223466f8e37471d279e6406',
       data: {
-        "p": filter.page,
-        "limit" : filter.limit,
+        'p': query.page,
+        'limit': query.limit,
       },
     );
 
     final productsJson = res.data['elements'] as List<dynamic>;
 
-    List<ProductModel> products = [];
+    final products = <ProductModel>[];
     for (final product in productsJson) {
       products.add(ProductModel.fromJson(product));
     }

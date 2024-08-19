@@ -1,11 +1,14 @@
 import 'package:auto_route/annotations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:test_task_naghashyan/enums/sort_types.dart';
-import 'package:test_task_naghashyan/store/home_state/home_state.dart';
-import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../http/repositories/product_repo.dart';
+import '../../enums/sort_types.dart';
+import '../../store/bloc/product_bloc/product_bloc.dart';
+import '../../store/bloc/product_bloc/product_event.dart';
+import '../../store/bloc/product_bloc/product_state.dart';
+import '../../store/bloc/scrolling_bloc/scrolling_bloc.dart';
+import '../../store/bloc/scrolling_bloc/scrolling_state.dart';
 import 'widgets/product_item.dart';
 
 @RoutePage<void>()
@@ -17,16 +20,14 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final HomeState _homeState = HomeState(
-    productRepository: ImplProductRepository(),
-  );
-
   final ScrollController _controller = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _homeState.getProducts();
+    context.read<ProductBloc>().add(
+          GetProducts(),
+        );
     _controller.addListener(scrollListener);
   }
 
@@ -40,63 +41,70 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: <Widget>[
           PopupMenuButton(
             onSelected: (type) {
-              _homeState.onTapSort(type);
+              context.read<ProductBloc>().add(
+                    OnSortTap(
+                      sortType: type,
+                    ),
+                  );
             },
             padding: EdgeInsets.zero,
             // initialValue: choices[_selection],
-            itemBuilder: (BuildContext context) {
+            itemBuilder: (context) {
               return popUpMenuItems;
             },
-          )
+          ),
         ],
       ),
       body: SizedBox(
         width: MediaQuery.of(context).size.width,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Expanded(
-              child: Observer(builder: (context) {
-                if (_homeState.loadingState.isLoading &&
-                    _homeState.products.isEmpty) {
-                  return const CupertinoActivityIndicator();
-                } else if (_homeState.products.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No Products',
-                      style: TextStyle(
-                        fontSize: 30,
+              child: BlocBuilder<ProductBloc, ProductState>(
+                builder: (context, state) {
+                  if (state is Loading) {
+                    return const CupertinoActivityIndicator();
+                  } else if (state is LoadedProducts &&
+                      state.products.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'No Products',
+                        style: TextStyle(
+                          fontSize: 30,
+                        ),
                       ),
-                    ),
-                  );
-                }
-                return ListView.builder(
-                  controller: _controller,
-                  padding: EdgeInsets.only(
-                    right: 10,
-                    left: 10,
-                    bottom: MediaQuery.of(context).padding.bottom + 10,
-                  ),
-                  itemBuilder: (BuildContext context, int index) {
-                    if (index == _homeState.products.length - 1) {
-                      _homeState.getProducts();
-                    }
-                    final product = _homeState.products[index];
-                    return ProductItem(
-                      product: product,
                     );
-                  },
-                  itemCount: _homeState.products.length,
-                );
-              }),
+                  } else if (state is LoadedProducts) {
+                    return ListView.builder(
+                      controller: _controller,
+                      padding: EdgeInsets.only(
+                        right: 10,
+                        left: 10,
+                        bottom: MediaQuery.of(context).padding.bottom + 10,
+                      ),
+                      itemBuilder: (context, index) {
+                        if (index == state.products.length - 1) {
+                          context.read<ProductBloc>().add(GetProducts());
+                        }
+                        final product = state.products[index];
+                        return ProductItem(
+                          product: product,
+                        );
+                      },
+                      itemCount: state.products.length,
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
             ),
           ],
         ),
       ),
-      floatingActionButton: Observer(
-        builder: (context) {
-          if (_homeState.hasScrollToggle) {
+      floatingActionButton: BlocBuilder<ScrollingBloc, ScrollingState>(
+        builder: (context, state) {
+          if (state is ShowScrollToTopButton) {
             return GestureDetector(
               onTap: () {
                 _controller.animateTo(
@@ -126,9 +134,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void scrollListener() {
     if (_controller.position.pixels > 300) {
-      _homeState.hasScrollToggle = true;
+      context.read<ScrollingBloc>().add(true);
     } else {
-      _homeState.hasScrollToggle = false;
+      context.read<ScrollingBloc>().add(false);
     }
   }
 
